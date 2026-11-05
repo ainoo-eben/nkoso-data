@@ -1,0 +1,25 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+# Testing
+.pytest_cache/
+# Data files
+*.csv
+*.parquet
+*.xlsx
+# Allow small synthetic test data
+!data/sample/**
+# Jupyter
+.ipynb_checkpoints/
+# dbt
+target/
+dbt_packages/
+logs/
+# Operating system
+.DS_Store
+Thumbs.db
