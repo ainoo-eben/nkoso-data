@@ -23,4 +23,3 @@ logs/
 # Operating system
 .DS_Store
 Thumbs.db
-test_app.py
