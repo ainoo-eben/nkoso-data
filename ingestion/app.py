@@ -1,3 +1,4 @@
+
 """
 shipment validator - Nkoso Logistics
 Reads shipments from a CSV file, checks each record, and prints the invalid ones.
@@ -49,6 +50,21 @@ def check_record(record):
     return problems
 
 
+def duplicate_shipment_rows(records):
+    """Return a flag for each record, marking repeated non-empty shipment IDs."""
+    seen_ids = set()
+    duplicates = []
+
+    for record in records:
+        shipment_id = (record.get("shipment_id") or "").strip()
+        is_duplicate = bool(shipment_id) and shipment_id in seen_ids
+        duplicates.append(is_duplicate)
+        if shipment_id:
+            seen_ids.add(shipment_id)
+
+    return duplicates
+
+
 def main():
     # Get the file name from the command line
     if len(sys.argv) < 2:
@@ -62,14 +78,17 @@ def main():
 
     # Check every record and collect the bad ones
     invalid_count = 0
-    row_number = 1
-    for record in records:
+    duplicate_rows = duplicate_shipment_rows(records)
+    for row_number, (record, is_duplicate) in enumerate(
+        zip(records, duplicate_rows), start=1
+    ):
         problems = check_record(record)
+        if is_duplicate:
+            problems.append("duplicate shipment_id")
         if problems:
             invalid_count += 1
             print("Row", row_number, "(" + str(record.get("shipment_id")) + "):",
                   ", ".join(problems))
-        row_number += 1
 
     # Print the summary
     print()
@@ -78,4 +97,5 @@ def main():
     print("Invalid:", invalid_count)
 
 
-main()
+if __name__ == "__main__":
+    main()

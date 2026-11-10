@@ -53,6 +53,8 @@ The validator also enforces these rules:
 
 - `ship_date` must be in `YYYY-MM-DD` format
 - `weight_kg` must be a number greater than `0`
+- `shipment_id` values must be unique; repeated IDs after their first occurrence are invalid
+  (leading and trailing whitespace is ignored, but comparison is case-sensitive)
 - `status` must be one of:
   - `pending`
   - `in_transit`

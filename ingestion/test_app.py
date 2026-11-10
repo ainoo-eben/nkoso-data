@@ -3,7 +3,7 @@ Tests for validate_shipments_simple.py
 Run with:  pytest test_validate_shipments.py -v
 """
 
-from app import check_record
+from app import check_record, duplicate_shipment_rows, main
 
 
 def make_valid_record():
@@ -68,3 +68,46 @@ def test_several_problems_are_all_reported():
     record["weight_kg"] = "abc"
     record["status"] = "lost"
     assert len(check_record(record)) == 2
+
+
+def test_repeated_shipment_id_is_marked_as_duplicate():
+    first = make_valid_record()
+    second = make_valid_record()
+    second["origin"] = "Accra"
+
+    assert duplicate_shipment_rows([first, second]) == [False, True]
+
+
+def test_shipment_ids_are_trimmed_before_duplicate_check():
+    first = make_valid_record()
+    second = make_valid_record()
+    first["shipment_id"] = " SHP001 "
+
+    assert duplicate_shipment_rows([first, second]) == [False, True]
+
+
+def test_blank_shipment_ids_are_not_marked_as_duplicates():
+    first = make_valid_record()
+    second = make_valid_record()
+    first["shipment_id"] = ""
+    second["shipment_id"] = "   "
+
+    assert duplicate_shipment_rows([first, second]) == [False, False]
+
+
+def test_main_reports_duplicate_shipment_as_invalid(tmp_path, monkeypatch, capsys):
+    csv_file = tmp_path / "shipments.csv"
+    csv_file.write_text(
+        "shipment_id,origin,destination,ship_date,weight_kg,carrier,status\n"
+        "SHP001,Takoradi,Accra,2026-11-01,250.5,Nkoso Express,in_transit\n"
+        "SHP001,Accra,Takoradi,2026-11-02,100,Nkoso Express,pending\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("sys.argv", ["app.py", str(csv_file)])
+
+    main()
+
+    output = capsys.readouterr().out
+    assert "Row 2 (SHP001): duplicate shipment_id" in output
+    assert "Valid: 1" in output
+    assert "Invalid: 1" in output
